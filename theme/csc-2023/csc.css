@@ -45,7 +45,7 @@
 /*********************************************
  * GLOBAL STYLES
  *********************************************/
-body {
+.reveal-viewport {
   background-color: black;
 }
 .slide-background {
