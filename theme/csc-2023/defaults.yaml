@@ -1,0 +1,17 @@
+---
+standalone: true
+to: revealjs
+variables:
+    width: 1920
+    height: 1080
+    history: true
+    center: false
+    controls: false
+    transition: none
+    backgroundTransition: none
+highlight-style: pygments
+html-math-method:
+    method: mathjax
+    url: https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-chtml-full.js
+...
+---
