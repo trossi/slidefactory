@@ -13,6 +13,12 @@ while getopts "hpt:" name; do
             theme="$OPTARG";;
         h|?)
             printf "Usage: %s: [-p] [-t theme] file.md\n" $0
+            printf "\nAvailable themes in $SLIDEFACTORY_THEME_ROOT:\n"
+            for d in $SLIDEFACTORY_THEME_ROOT/*; do
+                if [ -f "$d/template.html" ]; then
+                    printf "  %s\n" $(basename $d)
+                fi
+            done
             exit 2;;
     esac
 done
