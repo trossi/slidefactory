@@ -37,6 +37,27 @@ rm slidefactory.sif
 ```
 
 
+## Building and updating the container image
+
+The container recipe is encoded in `Dockerfile` and `Makefile`.
+
+Set image path for building and pushing
+```bash
+export IMAGE_ROOT=ghcr.io/trossi
+```
+
+Login using GitHub personal access token
+```bash
+podman login ${IMAGE_ROOT%%/*}
+```
+
+Build and push the image:
+```bash
+make
+make push
+```
+
+
 # Markdown file syntax
 
 Every slide set should start with a metadata block (see [Syntax

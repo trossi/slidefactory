@@ -1,5 +1,7 @@
 FROM docker.io/astefanutti/decktape:3.7.0
 
+LABEL org.opencontainers.image.source=https://github.com/trossi/slidefactory
+
 USER root
 
 RUN apk update && \
