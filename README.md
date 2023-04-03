@@ -7,17 +7,17 @@ Generate lecture slides in CSC style from markdown (or reStructuredText).
 
 Convert slides from Markdown to HTML:
 ```bash
-./slidefactory.sif example.md
+./slidefactory.sif example/example.md
 ```
 
 Convert slides from Markdown to HTML and PDF:
 ```bash
-./slidefactory.sif -p example.md
+./slidefactory.sif -p example/example.md
 ```
 
 Use specific theme (see `./slidefactory -h` for available themes):
 ```bash
-./slidefactory.sif -t csc-2023 -p example.md
+./slidefactory.sif -t csc-2023 -p example/example.md
 ```
 
 
@@ -50,7 +50,7 @@ good in handling minor differences), to avoid conversion errors, it is a good
 idea to be a bit picky about whitespaces etc. and to aim for consistent
 syntax.
 
-Please look at [example.md](example.md) for an example.
+Please look at [example/example.md](example/example.md) for an example.
 
 
 # Importing an existing presentation
