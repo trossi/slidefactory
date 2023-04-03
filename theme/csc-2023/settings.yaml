@@ -1,10 +1,4 @@
 ---
 theme-url: https://cdn.jsdelivr.net/gh/trossi/slidefactory@0.1.0/theme/csc-2023/csc.css
 revealjs-url: https://cdn.jsdelivr.net/npm/reveal.js@4.4.0
-header-includes: |
-  <style type="text/css">
-    html.print-pdf .reveal .slides .pdf-page:last-child {
-      page-break-after: avoid;
-    }
-  </style>
 ---
