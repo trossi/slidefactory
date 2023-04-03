@@ -25,7 +25,7 @@ Use specific theme (see `./slidefactory -h` for available themes):
 
 Slidefactory container image is available in github container registry:
 ```bash
-singularity pull slidefactory.sif docker://...
+singularity pull slidefactory.sif docker://ghcr.io/trossi/slidefactory:0.1.0
 ```
 
 
