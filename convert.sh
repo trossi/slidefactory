@@ -33,7 +33,8 @@ for fpath in "$@"; do
     pandoc -d "$theme_dpath/defaults.yaml" --template="$theme_dpath/template.html" -o "$html_fpath" "$theme_dpath/settings.yaml" "$fpath"
     if [ $? -eq 0 ] && [ ! -z "$do_pdf" ]; then
         pdf_fpath=${fpath%.*}.pdf
+        html_abs_fpath=$(readlink -f "$html_fpath")
         echo "Converting $html_fpath to $pdf_fpath"
-        node /decktape/decktape.js --chrome-path chromium-browser --chrome-arg=--no-sandbox "$html_fpath" "$pdf_fpath" > /dev/null
+        chromium-browser --headless --disable-gpu --disable-software-rasterizer --hide-scrollbars --virtual-time-budget=10000000 --run-all-compositor-stages-before-draw --print-to-pdf="$pdf_fpath" "file://$html_abs_fpath?print-pdf"
     fi
 done
