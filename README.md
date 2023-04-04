@@ -1,3 +1,5 @@
+# This is experimental and unstable repo. Do not use.
+
 # slidefactory
 
 Generate lecture slides in CSC style from markdown (or reStructuredText).
