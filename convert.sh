@@ -30,7 +30,7 @@ theme_dpath="$SLIDEFACTORY_THEME_ROOT/$theme"
 for fpath in "$@"; do
     html_fpath=${fpath%.*}.html
     echo "Converting $fpath to $html_fpath"
-    pandoc -d "$theme_dpath/defaults.yaml" --template="$theme_dpath/template.html" -o "$html_fpath" "$theme_dpath/urls.yaml" "$fpath"
+    pandoc -d "$theme_dpath/defaults.yaml" --template="$theme_dpath/template.html" --metadata-file="$theme_dpath/urls_local.yaml" -o "$html_fpath" "$fpath"
     if [ $? -eq 0 ] && [ ! -z "$do_pdf" ]; then
         pdf_fpath=${fpath%.*}.pdf
         html_abs_fpath=$(readlink -f "$html_fpath")
