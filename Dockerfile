@@ -34,6 +34,7 @@ RUN apk update && \
       py3-pandocfilters \
       py3-yaml \
       tar \
+      texlive \
       zip \
       && \
     rm -rf /var/cache/apk/*

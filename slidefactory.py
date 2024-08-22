@@ -25,7 +25,7 @@ from urllib.parse import quote as urlquote, urlparse
 from pathlib import Path
 
 
-VERSION = "3.1.0-beta.4"
+VERSION = "3.1.0-beta.5"
 SLIDEFACTORY_ROOT = Path(__file__).absolute().parent
 IN_CONTAINER = SLIDEFACTORY_ROOT == Path('/slidefactory')
 
@@ -242,6 +242,19 @@ def create_pdf(html_fpath, pdf_fpath):
     run(run_args)
 
 
+def combine_pdf(pdf_fpaths, out_fpath, *args):
+    run_args = [
+        'pdfjam',
+        '--a4paper',
+        '--landscape',
+        *args,
+        '-o', out_fpath,
+        '--',
+        *pdf_fpaths,
+        ]
+    run(run_args)
+
+
 def create_index_page(fpath, title, info_content, html_content, pdf_content):
     info(f'Create {fpath}')
     with fpath.open("w") as fd:
@@ -304,6 +317,14 @@ def build_content(fpath, page_theme_fpath, args, *, line_fmt='{}'):
 
     title = metadata["title"]
     content = ""
+    out_dpath = args.output / args.format / fpath.parent
+    compound_layout = "2x2"
+
+
+    def link_text(out_fpath, text):
+        rel_fpath = os.path.relpath(out_fpath, args.output)
+        return f'<c-link href="{rel_fpath}" target="_blank">{text}</c-link>\n'
+
 
     if "modules" in metadata:
         content += '<c-accordion value="none">\n'
@@ -311,38 +332,102 @@ def build_content(fpath, page_theme_fpath, args, *, line_fmt='{}'):
             mod_fpath = fpath.parent / module / fpath.name
             mod_title, mod_content = \
                 build_content(mod_fpath, page_theme_fpath, args,
-                              line_fmt='<p>{}</p>')
+                              line_fmt='<p>\n{}</p>\n')
             content += f'<c-accordion-item heading="{mod_title}" value="{module}">\n'  # noqa: E501
             content += mod_content
             content += '</c-accordion-item>\n'
         content += '</c-accordion>\n'
+
+        if args.format == 'pdf':
+            content += '</c-card-content>\n'
+            content += '<c-card-content>\n'
+
+            # Create a compound pdf
+            pdf_fpaths = []
+            for module in metadata["modules"]:
+                pdf_fpath = (out_dpath / module).with_suffix(f'.{compound_layout}.pdf')
+                pdf_fpaths.append(pdf_fpath)
+            out_fpath = out_dpath / f'all.{compound_layout}.pdf'
+            combine_pdf(pdf_fpaths, out_fpath)
+            content += link_text(
+                out_fpath,
+                f'Slides in {compound_layout} layout')
+
+            # Create zip
+            zip_fpath = args.output / 'slides.zip'
+            info(f'Create {zip_fpath}')
+            shutil.make_archive(
+                zip_fpath.with_suffix(''), 'zip',
+                args.output / args.format)
+            content += link_text(
+                zip_fpath,
+                f"Download a zip file containing all slides.")
+
     else:
         assert "slidesdir" in metadata
         slides_dpath = fpath.parent / metadata["slidesdir"]
+
         for md_fpath in sorted(slides_dpath.glob("*.md")):
             meta = read_slides_metadata(md_fpath)
-            html_name = md_fpath.with_suffix(".html").name
-            html_fpath = 'html' / fpath.parent / html_name
+            out_name = md_fpath.with_suffix(f".{args.format}").name
+            out_fpath = out_dpath / out_name
             slides_title = re.sub(r'<.*?>', '', meta["title"])
-            m = re.search(r'^\d+', html_name)
+            m = re.search(r'^\d+', out_name)
             prefix = '' if m is None else f'{int(m.group())}.'
-            content += line_fmt.format(f'<c-link href="{html_fpath}" target="_blank">{prefix} {slides_title}</c-link>')  # noqa: E501
-            content += '\n'
+            line = link_text(out_fpath, f"{prefix} {slides_title}")
+            content += line_fmt.format(line)
 
             # Convert slides
-            formats = ['html']
-            if args.with_pdf:
-                formats += ['pdf']
-            for fmt in formats:
-                args_slides = copy.copy(args)
-                args_slides.input = [md_fpath]
-                args_slides.output = args.output / fmt / fpath.parent
-                args_slides.format = fmt
-                if fmt == 'html':
-                    theme_url = os.path.relpath(page_theme_fpath,
-                                                html_fpath.parent)
-                    args_slides.theme_url = theme_url
-                main_slides(args_slides)
+            args_slides = copy.copy(args)
+            args_slides.input = [md_fpath]
+            args_slides.output = out_dpath
+            if args.format == 'html':
+                theme_url = os.path.relpath(page_theme_fpath,
+                                            out_dpath)
+                args_slides.theme_url = theme_url
+            main_slides(args_slides)
+
+            # Create a compound pdf
+            if args.format == 'pdf' and prefix != '':
+                tmp1_fpath = out_fpath.with_suffix(".tmp1.pdf")
+                tmp2_fpath = out_fpath.with_suffix(".tmp2.pdf")
+
+                combine_pdf(
+                    (out_fpath, '1'),
+                    tmp1_fpath,
+                    '--scale', '0.95',
+                    )
+
+                combine_pdf(
+                    (out_fpath, '2-'),
+                    tmp2_fpath,
+                    '--nup', compound_layout,
+                    '--delta', '0.5cm 0.5cm',
+                    '--scale', '0.95',
+                    '--frame', 'true',
+                    )
+
+                combine_pdf(
+                    (tmp1_fpath, tmp2_fpath),
+                    out_fpath.with_suffix(f".{compound_layout}.pdf"),
+                    )
+                tmp1_fpath.unlink()
+                tmp2_fpath.unlink()
+
+        # Create a compound pdf
+        if args.format == 'pdf':
+            out_fpaths = list(sorted(out_dpath.glob(f"*.{compound_layout}.pdf")))
+            compound_fpath = out_dpath.with_suffix(f".{compound_layout}.pdf")
+
+            combine_pdf(out_fpaths, compound_fpath)
+            line = link_text(
+                compound_fpath,
+                f"Slides in {compound_layout} layout")
+            content += line_fmt.format(line)
+
+            # Remove temporary files
+            for fpath in out_fpaths:
+                fpath.unlink()
 
     return title, content
 
@@ -569,21 +654,12 @@ def main_pages(args):
     info(f'Copy theme to {output_theme_dpath}')
     shutil.copytree(args.theme.dpath, output_theme_dpath)
 
+    args.format = 'html'
     title, html_content = build_content(args.input, page_theme_fpath, args)
 
     if args.with_pdf:
-        pdf_content = re.sub(r'href="html/(.*?).html"',
-                             r'href="pdf/\1.pdf"',
-                             html_content)
-        pdf_content += '</c-card-content>\n'
-        pdf_content += '<c-card-content>\n'
-
-        zip_fpath = args.output / 'slides.zip'
-        info(f'Create {zip_fpath}')
-        shutil.make_archive(zip_fpath.with_suffix(''),
-                            'zip',
-                            args.output / 'pdf')
-        pdf_content += f'<c-link href="{zip_fpath.name}">Download a zip file containing all slides.</c-link>\n'  # noqa: E501
+        args.format = 'pdf'
+        _, pdf_content = build_content(args.input, page_theme_fpath, args)
     else:
         pdf_content = "Not generated."
 
