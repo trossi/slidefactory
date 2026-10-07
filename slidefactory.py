@@ -23,7 +23,7 @@ from contextlib import contextmanager
 from urllib.parse import quote as urlquote, urlparse
 from pathlib import Path
 
-
+# TEST
 # Replaced at container build time; stays "git" for direct clones
 VERSION = "git"
 SLIDEFACTORY_ROOT = Path(__file__).absolute().parent
